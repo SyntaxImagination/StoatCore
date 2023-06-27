@@ -6,5 +6,5 @@ The idea behind this is to ensure we can
     - Ensure better flowing legacy support
 
 ## FEATURES PLAN
-    -[] CLI
-    -[x] Updatable Logic
+-[x] Updatable Logic
+-[] CLI
