@@ -8,6 +8,7 @@
  */
 
 const miscHelper = require('./Helpers/index.js');
+const net = require('./net/index.js');
 
 
 global.stoat = {
@@ -17,7 +18,10 @@ global.stoat = {
     //Helpers 
     helpers : {
         misc : miscHelper
-    }
+    },
+    
+    //Net 
+    net: net
 }
 
 //_s is the short form of writing stoat which will most likely be prefered
