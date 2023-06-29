@@ -7,25 +7,46 @@
  *  - Database : For Database Access and Holds (Will Also include Flat Files)   
  */
 
-const miscHelper = require('./Helpers/index.js');
-const encryptionHelper = require('./Helpers/encryption.js');
+const miscHelper = require('./Helpers/Helper');
+const encryptionHelper = require('./Helpers/Encryption.js');
+const securityHelper = require('./Helpers/Security.js');
 
-const mimetypes = require('./Helpers/system/mimetypes.js');
+const mimeTypes = require('./System/Mimetypes.js');
 
-const net = require('./net/index.js');
-
+const net = require('./Net/index.js');
 
 global.stoat = {
     //Config is empty and at Stoat application run, it will load the config file
-    config : {},
+    config : {
+        environment : "staging",
+        baseUrl : "",
+        app : {},
+        requestsConf : {
+            cors : false,
+            checkOrigin : false,
+            allowedMethods : ["GET", "POST"]
+        },
+        responseConf : {
+            pages : {
+                indexPage : "index.html",
+                notFoundPage : "error.html"
+            }
+        },
+    },
     /**
      * The Config is loaded from the config file by the user at app start
      */
 
+    misc : {
+        rootPath : "",
+        rootParent : ""
+    },
+
     //Helpers 
     helpers : {
-        misc : miscHelper,
-        encryption : encryptionHelper,
+        Helper : miscHelper,
+        Encryption : encryptionHelper,
+        Security: securityHelper,
     },
 
     //Database
@@ -45,11 +66,21 @@ global.stoat = {
 
     //System
     __system : {
-        mimeTypes : mimetypes
-    }
+        mimeTypes: mimeTypes,
+    },
     /**
      * System features are not genrally accessed by users but used in Stoat
      */
+
+    //Private Functions
+    __f : {
+        dynmaicImport: async (path) => {
+            return await import(path);
+        }
+    },
+
+    //Paths
+    paths : {}
 }
 
 //_s is the short form of writing stoat which will most likely be prefered

@@ -2,7 +2,6 @@
  * Module : Core Mimetypes
  * Desc : Mimetypes are used to decide what files are translatable by the server
  */
-
 let coreMimeTypes = [
     //basic Web Assets
     {
@@ -125,4 +124,4 @@ let coreMimeTypes = [
     }
 ];
 
-module.export = coreMimeTypes;
+module.exports = coreMimeTypes;
