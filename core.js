@@ -51,6 +51,7 @@ global.stoat = {
 
     //Database
     db : {},
+    dbConfig : [],
     /**
      * The Database is a key-value 
      * { databasename : tablename / collectionname }
