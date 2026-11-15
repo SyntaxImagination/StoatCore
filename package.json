@@ -1,6 +1,6 @@
 {
   "name": "stoatcore",
-  "version": "1.0.0",
+  "version": "1.1.2",
   "description": "The Core Engine for Stoat Framework",
   "main": "core.js",
   "scripts": {

@@ -121,7 +121,22 @@ let coreMimeTypes = [
     {
         file: ['.ics'],
         content: 'text/calendar'
+    },
+
+    //Compressed
+    {
+        file: ['.gz'],
+        content: 'application/gzip'
+    },
+    {
+        file: ['.tar.gz'],
+        content: 'application/x-tar'
+    },
+    {
+        file: ['.tar.bz2'],
+        content: 'application/x-tar'
     }
+    
 ];
 
 module.exports = coreMimeTypes;

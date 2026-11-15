@@ -1,76 +1,111 @@
 /**
  * Encryption Helper
- * The Encryption Helper helps in running Perfect encryptions
+ * Cryptographic utilities available as _s.helpers.Encryption.*
+ *
+ * Changes from v1.0.0:
+ *  - encrypt / decrypt    : AES-256-GCM replaces deprecated 3DES (des-ede3)
+ *  - threeDESEncrypt/Decrypt : kept as aliases → encrypt/decrypt for back-compat
+ *  - hash                 : SHA-256 replaces MD5 for integrity checks
+ *  - MD5Encryption        : kept as alias → hash for back-compat
+ *  - hashPassword         : new — scrypt-based password hashing (no extra packages)
+ *  - verifyPassword       : new — constant-time scrypt password verification
+ *
+ * All methods use only Node.js built-in `crypto` module.
  */
 
 const {
-    createHash,
+    createCipheriv,
     createDecipheriv,
-    createCipheriv
-} = require('crypto');
+    createHash,
+    createHmac,
+    randomBytes,
+    scryptSync,
+    timingSafeEqual,
+} = require("crypto");
 
-const algorithm = 'aes192';
+// Internal key derivation — derive a 32-byte key from any string secret
+function deriveKey(secret) {
+    return scryptSync(secret, "stoat-enc-salt-v1", 32);
+}
 
 const Encryption = {
 
-    //3Des Encryption
-    threeDESEncrypt: (secretKey, text) => {
+    // ── Symmetric encryption (AES-256-GCM) ───────────────────────────
 
-        secretKey = createHash('md5').update(secretKey).digest();
-        secretKey = Buffer.concat([secretKey, secretKey.slice(0, 8)]); // properly expand 3DES key from 128 bit to 192 bit
-
-        const cipher = createCipheriv('des-ede3', secretKey, '');
-        const encrypted = cipher.update(text, 'utf8', 'base64');
-
-        return encrypted + cipher.final('base64');
+    encrypt(text, secret) {
+        const key    = deriveKey(secret);
+        const iv     = randomBytes(16);
+        const cipher = createCipheriv("aes-256-gcm", key, iv);
+        const enc    = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
+        const tag    = cipher.getAuthTag();
+        // Format: iv:tag:ciphertext — all hex-encoded
+        return `${iv.toString("hex")}:${tag.toString("hex")}:${enc.toString("hex")}`;
     },
 
-    //3Des Decryption
-    threeDESDecrypt: (secretKey, encryptedString) => {
-
-        secretKey = createHash('md5').update(secretKey).digest();
-        secretKey = Buffer.concat([secretKey, secretKey.slice(0, 8)]); // properly expand 3DES key from 128 bit to 192 bit
-
-        const decipher = createDecipheriv('des-ede3', secretKey, '');
-
-        let decrypted = decipher.update(encryptedString, 'base64');
-        decrypted += decipher.final();
-
-        return decrypted;
+    decrypt(encryptedStr, secret) {
+        const [ivHex, tagHex, dataHex] = encryptedStr.split(":");
+        const key      = deriveKey(secret);
+        const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(ivHex, "hex"));
+        decipher.setAuthTag(Buffer.from(tagHex, "hex"));
+        return (
+            decipher.update(Buffer.from(dataHex, "hex"), undefined, "utf8") +
+            decipher.final("utf8")
+        );
     },
 
-    //MD5 Encryption
-    MD5Encryption: (text) => {
-        return createHash('md5').update(text).digest('hex');
+    // Back-compat aliases (3DES was deprecated by NIST in 2023)
+    threeDESEncrypt(secret, text) { return Encryption.encrypt(text, secret); },
+    threeDESDecrypt(secret, enc)  { return Encryption.decrypt(enc, secret);  },
+
+    // ── Hashing ───────────────────────────────────────────────────────
+
+    // SHA-256 for integrity / non-secret identifiers
+    hash(value) {
+        return createHash("sha256").update(value).digest("hex");
     },
 
-    //Convert String to Base64
-    convertStringToBase64: (text) => {
-        const buff = Buffer.from(text, 'utf-8');
-        const base64 = buff.toString('base64');
+    // Back-compat alias (MD5 is cryptographically broken — now SHA-256)
+    MD5Encryption(text) { return Encryption.hash(text); },
 
-        return base64;
+    // HMAC-SHA256 for message authentication codes
+    hmac(value, secret) {
+        return createHmac("sha256", secret).update(value).digest("hex");
     },
 
-    //Convert to String to Base64
-    convertStringFromBase64: (base64) => {
-        const buff = Buffer.from(base64, 'base64');
-        const text = buff.toString('utf-8');
+    // ── Password hashing (scrypt) ─────────────────────────────────────
 
-        return text;
+    hashPassword(password) {
+        const salt = randomBytes(16).toString("hex");
+        const hash = scryptSync(password, salt, 64).toString("hex");
+        return `${salt}:${hash}`;
     },
 
-//Hexadecimal to String
-    convertHexToString: (hex) => {
-        var hex = hex.toString();
-        var str = '';
+    verifyPassword(password, stored) {
+        const [salt, hash] = stored.split(":");
+        const attempt = scryptSync(password, salt, 64);
+        // Constant-time comparison prevents timing attacks
+        return timingSafeEqual(attempt, Buffer.from(hash, "hex"));
+    },
 
-        for (var n = 0; n < hex.length; n += 2) {
+    // ── Base64 utilities ──────────────────────────────────────────────
+
+    convertStringToBase64(text) {
+        return Buffer.from(text, "utf-8").toString("base64");
+    },
+
+    convertStringFromBase64(base64) {
+        return Buffer.from(base64, "base64").toString("utf-8");
+    },
+
+    // ── Hex utilities ─────────────────────────────────────────────────
+
+    convertHexToString(hex) {
+        hex = hex.toString();
+        let str = "";
+        for (let n = 0; n < hex.length; n += 2)
             str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
-        }
         return str;
-    }
-
-}
+    },
+};
 
 module.exports = Encryption;

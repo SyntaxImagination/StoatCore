@@ -1,88 +1,70 @@
 /**
  * STOAT CORE
- * Description : StoatCore is the Engine that globallize the stoat variable and all the contents
- * By Default Stoat Object comes with 
- *  - Config to hold application config,
- *  - Helpers - Extendable Helpers 
- *  - Database : For Database Access and Holds (Will Also include Flat Files)   
+ * Description : StoatCore is the Engine that globalises the stoat variable and all contents.
+ * By Default the Stoat Object comes with:
+ *  - config   : holds application config
+ *  - helpers  : extendable helper namespaces
+ *  - db       : database connection registry
+ *  - net      : outbound HTTP/HTTPS client
+ *  - __system : internal framework state
  */
 
-const miscHelper = require('./Helpers/Helper');
-const encryptionHelper = require('./Helpers/Encryption.js');
-const securityHelper = require('./Helpers/Security.js');
+const miscHelper       = require("./Helpers/Helper");
+const encryptionHelper = require("./Helpers/Encryption");
+const securityHelper   = require("./Helpers/Security");
+const databaseHelper   = require("./Helpers/Database");  // wired up — was missing in v1.0.0
 
-const mimeTypes = require('./System/Mimetypes.js');
-
-const net = require('./Net/index.js');
+const mimeTypes = require("./System/Mimetypes");
+const net       = require("./Net/index");
 
 global.stoat = {
-    //Config is empty and at Stoat application run, it will load the config file
-    config : {
+
+    config: {
         environment : "staging",
-        baseUrl : "",
-        app : {},
-        requestsConf : {
-            cors : false,
-            checkOrigin : false,
-            allowedMethods : ["GET", "POST"]
+        baseUrl     : "",
+        app         : {},
+        requestConf : {
+            cors           : false,
+            checkOrigin    : false,
+            allowedMethods : ["GET", "POST"],
+            maxBodyBytes   : 1048576,
         },
-        responseConf : {
-            pages : {
-                indexPage : "index.html",
-                notFoundPage : "error.html"
-            }
+        responseConf: {
+            indexPage    : "index.html",
+            notFoundPage : "error.html",
         },
     },
-    /**
-     * The Config is loaded from the config file by the user at app start
-     */
 
-    misc : {
-        rootPath : "",
-        rootParent : ""
+    misc: {
+        rootPath  : "",
+        rootParent: "",
     },
 
-    //Helpers 
-    helpers : {
-        Helper : miscHelper,
+    helpers: {
+        Helper     : miscHelper,
         Encryption : encryptionHelper,
-        Security: securityHelper,
+        Security   : securityHelper,
+        Database   : databaseHelper,
     },
 
-    //Database
-    db : {},
-    dbConfig : [],
-    /**
-     * The Database is a key-value 
-     * { databasename : tablename / collectionname }
-     */
+    db      : {},
+    dbConfig: [],
 
-    //Net 
-    net: net,
-    /**
-     * The Net Module is used for sending requests 
-     * it can do get, head, post, put, patch, option
-     * Socket is coming soon
-     */
+    net,
 
-    //System
-    __system : {
-        mimeTypes: mimeTypes,
-    },
-    /**
-     * System features are not genrally accessed by users but used in Stoat
-     */
-
-    //Private Functions
-    __f : {
-        dynmaicImport: async (path) => {
-            return await import(path);
-        }
+    __system: {
+        mimeTypes     : mimeTypes,
+        allowedOrigins: [],
+        notFoundPage  : "",
+        routes        : {},
     },
 
-    //Paths
-    paths : {}
-}
+    __f: {
+        dynamicImport: async (path) => await import(path),
+    },
 
-//_s is the short form of writing stoat which will most likely be prefered
+    paths: {},
+};
+
+// _s is the short alias — preferred in application code
 global._s = stoat;
