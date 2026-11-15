@@ -9,6 +9,7 @@
  *  4. option/delete parameter renamed to params (was referencing undefined `params`)
  *  5. Content-Length uses Buffer.byteLength   (fixes multi-byte char miscounts)
  *  6. Body buffered and resolved on `end`     (was resolving mid-stream on `data`)
+ *  7. GET/HEAD (and bodyless DELETE/OPTIONS) no longer send "{}" or Content-Length
  *
  * SC-F3 — Streaming support:
  *  Pass `stream: true` in params to receive the raw IncomingMessage instead of
@@ -86,27 +87,35 @@ function processRequest(params) {
                 return failed(new Error(`Unsupported protocol: ${protocol}`));
         }
 
-        // Serialise body
-        const body = params.hasOwnProperty("data")
-            ? JSON.stringify(params.data)
-            : "{}";
+        // Serialise body only for methods that carry a payload
+        const methodAllowsBody = params.method !== "GET" && params.method !== "HEAD";
+        let body = null;
+        if (methodAllowsBody) {
+            if (params.hasOwnProperty("data")) {
+                body = JSON.stringify(params.data);
+            } else if (["POST", "PUT", "PATCH"].includes(params.method)) {
+                body = "{}";
+            }
+        }
 
         // Parse host, optional port, and path
         const [hostAndPort, ...pathParts] = rest.split("/");
         const [hostname, portFromUrl]     = hostAndPort.split(":");
-        const endpointPath = `/${pathParts.join("/")}` || "/";
+        const endpointPath = `/${pathParts.join("/")}`;
 
         // Fix 5: Buffer.byteLength for accurate Content-Length with unicode
         const requestDetails = {
             protocol : `${protocol}:`,
             hostname,
             method   : params.method,
-            path     : encodeURI(endpointPath),
-            headers  : {
-                "Content-Type"   : "application/json",
-                "Content-Length" : Buffer.byteLength(body),
-            },
+            path     : encodeURI(endpointPath) || "/",
+            headers  : {},
         };
+
+        if (body !== null) {
+            requestDetails.headers["Content-Type"]   = "application/json";
+            requestDetails.headers["Content-Length"] = Buffer.byteLength(body);
+        }
 
         if (portFromUrl) {
             requestDetails.port = portFromUrl;
@@ -130,7 +139,8 @@ function processRequest(params) {
                 key !== "url"     &&
                 key !== "data"    &&
                 key !== "headers" &&
-                key !== "port"
+                key !== "port"    &&
+                key !== "stream"
             ) {
                 requestDetails[key] = params[key];
             }
@@ -180,7 +190,9 @@ function processRequest(params) {
             success(response);
         });
 
-        req.write(body);
+        if (body !== null) {
+            req.write(body);
+        }
         req.end();
     });
 }

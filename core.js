@@ -9,54 +9,54 @@
  *  - __system : internal framework state
  */
 
-const miscHelper       = require("./Helpers/Helper");
+const miscHelper = require("./Helpers/Helper");
 const encryptionHelper = require("./Helpers/Encryption");
-const securityHelper   = require("./Helpers/Security");
-const databaseHelper   = require("./Helpers/Database");  // wired up — was missing in v1.0.0
+const securityHelper = require("./Helpers/Security");
+const databaseHelper = require("./Helpers/Database");  // wired up — was missing in v1.0.0
 
 const mimeTypes = require("./System/Mimetypes");
-const net       = require("./Net/index");
+const net = require("./Net/index");
 
 global.stoat = {
 
     config: {
-        environment : "staging",
-        baseUrl     : "",
-        app         : {},
-        requestConf : {
-            cors           : false,
-            checkOrigin    : false,
-            allowedMethods : ["GET", "POST"],
-            maxBodyBytes   : 1048576,
+        environment: "staging",
+        baseUrl: "",
+        app: {},
+        requestConf: {
+            cors: false,
+            checkOrigin: false,
+            allowedMethods: ["GET", "POST"],
+            maxBodyBytes: 1048576,
         },
         responseConf: {
-            indexPage    : "index.html",
-            notFoundPage : "error.html",
+            indexPage: "index.html",
+            notFoundPage: "error.html",
         },
     },
 
     misc: {
-        rootPath  : "",
+        rootPath: "",
         rootParent: "",
     },
 
     helpers: {
-        Helper     : miscHelper,
-        Encryption : encryptionHelper,
-        Security   : securityHelper,
-        Database   : databaseHelper,
+        Helper: miscHelper,
+        Encryption: encryptionHelper,
+        Security: securityHelper,
+        Database: databaseHelper,
     },
 
-    db      : {},
+    db: {},
     dbConfig: [],
 
     net,
 
     __system: {
-        mimeTypes     : mimeTypes,
+        mimeTypes: mimeTypes,
         allowedOrigins: [],
-        notFoundPage  : "",
-        routes        : {},
+        notFoundPage: "",
+        routes: {},
     },
 
     __f: {
