@@ -1,6 +1,6 @@
 # StoatCore
 
-**Version:** 1.1.3 (npm package: `stoatcore`)
+**npm package:** [`stoatcore`](https://www.npmjs.com/package/stoatcore) — use `stoatcore@latest`
 
 StoatCore is the bootstrap engine for Stoat Framework. It seeds the global `_s`
 / `stoat` object that all parts of the framework share, and wires up the helper,
@@ -10,30 +10,19 @@ database, net, and system namespaces before any application code runs.
 
 ## Installation & Deployment
 
-`stoatcore` is published and maintained on npm. Projects depend on it directly
-via npm, Bun, or Deno's `npm:` specifier:
-
-```json
-"dependencies": {
-  "stoatcore": "^1.1.3"
-}
-```
-
-For Deno projects (`deno.json`):
-
-```json
-"imports": {
-  "stoatcore": "npm:stoatcore@^1.1.3"
-}
-```
-
-When updates are published to npm, update your project with:
+`stoatcore` is published and maintained on npm. Always install the **latest** release:
 
 ```bash
-npm update stoatcore
+npm install stoatcore@latest
 # or
-bun update stoatcore
+bun add stoatcore@latest
+# or (Deno — adds it to the deno.json import map)
+deno add npm:stoatcore@latest
 ```
+
+Stoat Framework projects get it automatically: `stoat init` adds the current release, and `stoat update` moves older projects onto it.
+
+> **Deno note:** Deno refuses npm versions published less than 24 hours ago by default. Right after a release, pass `--minimum-dependency-age=0` to take it immediately.
 
 ---
 
